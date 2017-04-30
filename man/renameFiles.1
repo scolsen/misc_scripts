@@ -1,0 +1,36 @@
+.\" renameFiles man page.
+.TH RENAMEFILES
+.SH NAME
+renameFiles \- rename files based on the contents of a csv file.
+.SH SYNOPSIS
+.B renameFiles 
+\fB-n\fR \fIcsvFile\fR 
+\fB\-d\fR \fIdirectoryOfFilesToRename\fR
+.BI \-e extension
+[\fB\-\-debug\fR]
+.SH DESCRIPTION
+.B renameFiles
+renames files using a csv file with fields matching the pattern <oldFileName>,<newFileName>
+Files in the target directory matching <oldFileName> are renamed <newFileName>
+If an extension is specified, only files matching that extension are updated. 
+The default extension is jpg.
+.SH OPTIONS
+.TP
+.BR \-n ", " \-\-new\-file\-name =\fIcsvFile\fR
+Specifies the csv file to use to update file names.
+.TP
+.BR \-d ", " \-\-old\-file\-directory =\fIdirectoryOfFilesToChange\fR
+Specifies the directory containing the files to rename.
+.TP
+.BR -e ", " \-\-extension =\fIfileExtension\fR
+Specfies file extension to rename.
+Files not matching this extension are not renamed.
+Default value is jpg.
+.SH EXAMPLES
+command:
+.PP
+.nf
+.RS
+renameFiles -n myNames.csv -d stuff/myFiles/torename/ -e txt
+.RE
+.fi
