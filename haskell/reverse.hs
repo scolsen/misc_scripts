@@ -20,19 +20,15 @@ help :: String
 help = "Usage: ..."
 
 options :: [OptDescr Flag]
-options =   [ Option ['v'] ["verbose"] (NoArg Verbose) "Chatty output",
-            Option ['h'] ["help"] (NoArg (Help help)) "Help",
-            Option ['o'] ["output"] (OptArg (Opt . fromMaybe "stdout") "OUT") "Output",
-            Option ['d'] ["dragon"] (OptArg (Opt . fromMaybe "other") "OUT") "Output"
-          ]
+options =  [ Option ['v'] ["verbose"] (NoArg Verbose) "Chatty output",
+             Option ['h'] ["help"] (NoArg (Help help)) "Help",
+             Option ['o'] ["output"] (OptArg (Opt ["o"] . fromMaybe "stdout") "OUT") "Output",
+             Option ['d'] ["dragon"] (OptArg (Opt ["dragon","d"] . fromMaybe "other") "OUT") "Output"
+           ]
 
 rvrs = map reverse 
 
-extract :: ([Flag], [String]) -> ([String], [String])
-extract (a, b) = (catMaybes (map optVal a), b)
-
 main = getArgs
-       >>= return . parsed .  parse options
-       >>= displayhelp help
-       -- >>= return .extract 
-       -- >>= print
+       >>= parsedIO . parse options
+       >>= print
+       -- >>= return . rvrs . parsedToNonOpts 
