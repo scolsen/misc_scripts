@@ -1,5 +1,5 @@
 #!/usr/bin/env stack
--- stack --resolver lts-9.11 script
+-- stack --resolver lts-6.25 script
 
 import MinParse 
 import System.Console.GetOpt
@@ -8,45 +8,31 @@ import Control.Monad
 import System.Environment 
 import System.Exit
 import Data.Maybe
+import Data.List
 
-data sett  = sett { verbose :: Bool,
-                    version :: Bool,
-                    help :: Bool,
-                    output :: Maybe String
-                  } 
+-- Use Opt for arguments that take strings.
+-- Use Flg for arguments that are boolean flags.
 
-type Fal = (sett -> sett)
+version :: String
+version = "1.0.0"
 
-opts :: [OptDescr ]
-opts = [ Option "h" ["help"] ()
-
-       ]
-
-data Flag = Verbose 
-          | Version
-          | Help
-          | Output String
-          deriving (Eq, Show)
+help :: String
+help = "Usage: ..."
 
 options :: [OptDescr Flag]
 options =   [ Option ['v'] ["verbose"] (NoArg Verbose) "Chatty output",
-            Option ['h'] ["help"] (NoArg Falg Help) "Help",
-            Option ['o'] ["output"] (OptArg (Output . fromMaybe "stdout") "OUT") "Output"
+            Option ['h'] ["help"] (NoArg (Help help)) "Help",
+            Option ['o'] ["output"] (OptArg (Opt . fromMaybe "stdout") "OUT") "Output",
+            Option ['d'] ["dragon"] (OptArg (Opt . fromMaybe "other") "OUT") "Output"
           ]
 
 rvrs = map reverse 
 
-getString :: Flag -> Maybe String
-getString (Output a) = Just a
-getString _ = Nothing
-
-extract:: ([Flag], [String]) -> ([String], [String])
-extract (a, b) = (catMaybes (map getString a), b)
-
---proc ([], []) = getContents
-                -- >>= putStrLn . rvrs
+extract :: ([Flag], [String]) -> ([String], [String])
+extract (a, b) = (catMaybes (map optVal a), b)
 
 main = getArgs
-       >>= return . parsed . parse options
-       >>= return . extract 
-       >>= print
+       >>= return . parsed .  parse options
+       >>= displayhelp help
+       -- >>= return .extract 
+       -- >>= print
