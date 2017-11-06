@@ -28,7 +28,6 @@ options =  [ Option ['v'] ["verbose"] (NoArg Verbose) "Chatty output",
 
 rvrs = map reverse 
 
-main = getArgs
-       >>= parsedIO . parse options
+main = parseArgs options
        >>= print
        -- >>= return . rvrs . parsedToNonOpts 
