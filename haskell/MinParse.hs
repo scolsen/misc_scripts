@@ -1,23 +1,29 @@
 module MinParse (
+                  Identifiers(..),
                   Flag(..),
                   Parsed,
-                  parsed,
-                  parsedOpts,
-                  nonOpts,
                   parse,
-                  parsedToFlags,
-                  parsedToNonOpts,
-                  parsedToValues,
-                  flgVal,
-                  optVal,
-                  getOptByName,
-                  getOptsByName,
-                  getValByName,
-                  putversion,
-                  puthelp,
-                  displayhelp,
+                  getParsed,
                   parsedIO,
-                  parseArgs
+                  parseArgs,
+                  parsedFlags,
+                  parsedNonOpts,
+                  parsedValues,
+                  getOptByIden,
+                  getOptsByIden,
+                  getArgByIden,
+                  getAllIdentifiers,
+                  getArg,
+                  getFlg,
+                  getIdentifiers,
+                  hasIdentifier,
+                  optArg,
+                  reqArg,
+                  noArg,
+                  putVersion,
+                  putHelp,
+                  displayHelp,
+                  displayVersion
                 ) where
 
 import System.IO
@@ -29,86 +35,110 @@ import Data.Maybe
 import Data.List
 import Data.Maybe
 
+data Identifiers = Identifiers [Char] [String]
+                    deriving(Eq, Show)
+unIdentifiers :: Identifiers -> ([Char], [String])
+unIdentifiers (Identifiers a b) = (a, b)
+
+unIdenChar :: Identifiers -> [Char]
+unIdenChar (Identifiers a _) = a
+
+unIdenStr :: Identifiers -> [String]
+unIdenStr (Identifiers _ a) = a
+
 data Flag = Verbose 
           | Help String
           | Version String
-          | Flg [String]
-          | Opt [String] String 
-           deriving (Eq, Show)
+          | Flg Identifiers Bool
+          | Opt Identifiers String 
+          deriving (Eq, Show)
 
-type OptTuple = ([Flag], [String], [String])
-type Parsed = ([Flag], [String])
+type GetOptTuple = ([Flag], [String], [String])
+type Parsed      = ([Flag], [String])
 
+-- Core. "Returns" Parsed
 parse :: [OptDescr Flag] -> [String] -> ([Flag], [String], [String])
 parse options args = getOpt RequireOrder options args
 
-parsed :: OptTuple -> Parsed
-parsed trip = (parsedOpts trip, nonOpts trip)
+getParsed :: GetOptTuple -> Parsed
+getParsed (a, b, [])   = (a, b)
+getParsed (a, _, errs) = (a, errs)
 
-parsedIO :: OptTuple -> IO Parsed
-parsedIO trip = return (parsedOpts trip, nonOpts trip)
+parsedIO :: GetOptTuple -> IO Parsed
+parsedIO tup = return (getParsed tup)
 
-parseArgs :: [OptDescr Flag] -> IO Parsed --Courtesy, getArgs then parse 
-parseArgs opts = getArgs
-                 >>= parsedIO . parse opts
+parseArgs :: [OptDescr Flag] -> IO Parsed -- getArgs then parse 
+parseArgs opts = getArgs >>= parsedIO . parse opts
 
-parsedOpts :: OptTuple -> [Flag]
-parsedOpts (a, _, _) = a
+-- Parsed
+parsedFlags :: Parsed -> [Flag]
+parsedFlags (a, _) = a
 
-nonOpts :: OptTuple -> [String]
-nonOpts (_, a, []) = a
-nonOpts (_, _, errs) = errs
+parsedNonOpts :: Parsed -> [String]
+parsedNonOpts (_, b) = b
 
-optVal :: Flag -> Maybe String
-optVal (Opt a b) = Just b
-optVal _ = Nothing
+parsedValues :: Parsed -> ([String], [String])
+parsedValues (a, b) = (catMaybes (map getArg a), b) 
 
-optNames :: Flag -> [String]
-optNames (Opt a b) = a
-optNames _ = []
+getOptByIden :: Parsed -> String -> [Flag]
+getOptByIden x str = filter (\y -> hasIdentifier y (Nothing, Just str)) (parsedFlags x)
 
-optHasName :: String -> Flag -> Bool
-optHasName str (Opt a b) = any (str ==) a
-optHasName str (Flg a) = any (str ==) a
+getOptsByIden :: Parsed -> [String] -> [Flag]
+getOptsByIden p strs = join (map (\y -> (getOptByIden p y)) strs)
 
-flgVal :: Flag -> Maybe Bool
-flgVal (Flg a) = Just True
-flgVal _ = Just False
+getArgByIden :: Parsed -> String -> [Maybe String]
+getArgByIden x str = map getArg (getOptByIden x str)
 
-optionNames :: [Flag] -> [String] 
-optionNames x = join (map optNames x)
+getAllIdentifiers :: Parsed -> [Identifiers]
+getAllIdentifiers x = map getIdentifiers (parsedFlags x)
 
-getOptByName :: String -> Parsed -> [Flag]
-getOptByName str x = filter (optHasName str) (fst x)
+-- Flag
+getArg :: Flag -> Maybe String
+getArg (Opt i a) = Just a
+getArg _         = Nothing
 
-getValByName :: String -> Parsed -> [Maybe String]
-getValByName str x  = map optVal (getOptByName str x)
+getFlg :: Flag -> Maybe Bool
+getFlg (Flg i b) = Just b
+getFlg _         = Nothing
 
-getOptsByName :: [String] -> Parsed -> [Flag]
-getOptsByName strs p = join (map (\y -> (getOptByName y p)) strs)
+getIdentifiers :: Flag -> Identifiers
+getIdentifiers (Opt i _) = i
+getIdentifiers (Flg i _) = i
+getIdentifiers _         = Identifiers [] []
 
-puthelp :: Maybe Flag -> IO ()
-puthelp (Just (Help a))= putStrLn a
-                   >> exitWith(ExitFailure 1)
-puthelp Nothing = putStrLn "No help documentation provided."
+hasIdentifier :: Flag -> (Maybe Char, Maybe String) -> Bool
+hasIdentifier (Opt i _) (Just a, Just b) = or ((any (a ==) (unIdenChar i)):(any (b ==) (unIdenStr i)):[])
+hasIdentifier (Opt i _) (Nothing, Just b)        = or (False:(any (b ==) (unIdenStr i)):[])
+hasIdentifier (Opt i _) (Just a, Nothing)        = or ((any (a ==) (unIdenChar i)):False:[])
+hasIdentifier (Flg i _) (Just a, Just b) = or ((any (a ==) (unIdenChar i)):(any (b ==) (unIdenStr i)):[])
+hasIdentifier (Flg i _) (Nothing, Just b)        = or (False:(any (b ==) (unIdenStr i)):[])
+hasIdentifier (Flg i _) (Just a, Nothing)        = or ((any (a ==) (unIdenChar i)):False:[])
 
-putversion :: Maybe Flag -> IO ()
-putversion (Just (Version a)) = putStrLn a
-                         >> exitWith(ExitFailure 1)
-putversion Nothing = putStrLn "Unknown Version"
+-- Identifiers
+optArg :: [Char] -> [String] -> String -> String -> String -> OptDescr Flag
+optArg c s def alt use = 
+    Option c s (OptArg (Opt (Identifiers c s) . fromMaybe def) alt) use
 
--- Courtesy Functions
+reqArg :: [Char] -> [String] -> String -> String -> OptDescr Flag
+reqArg c s alt use = 
+    Option c s (ReqArg (Opt (Identifiers c s)) alt) use
 
---Take a parsed and find and display help.
-displayhelp :: String -> Parsed -> IO ()
-displayhelp x (a, _) = puthelp (find (== Help x) a)
-diaplyhelp _ (_, _) = putStrLn "Error. No help text provided"
+noArg :: [Char] -> [String] -> Bool -> String -> OptDescr Flag
+noArg c s def use = 
+    Option c s (NoArg (Flg (Identifiers c s) def)) use
 
-parsedToFlags :: Parsed -> [Flag]
-parsedToFlags (a, _) = a
+-- Display
+putHelp :: Maybe Flag -> IO ()
+putHelp (Just (Help a)) = putStrLn a >> exitWith(ExitFailure 1)
+putHelp Nothing         = putStrLn "No help documentation provided."
 
-parsedToNonOpts :: Parsed -> [String]
-parsedToNonOpts (_, b) = b
+putVersion :: Maybe Flag -> IO ()
+putVersion (Just (Version a)) = putStrLn a >> exitWith(ExitFailure 1)
+putVersion Nothing            = putStrLn "Unknown Version"
 
-parsedToValues :: Parsed -> ([String], [String])
-parsedToValues (a, b) = (catMaybes (map optVal a), b) 
+displayHelp :: Parsed -> String -> IO ()
+displayHelp (a, _) x = putHelp (find (== Help x) a)
+
+displayVersion :: Parsed -> String -> IO ()
+displayVersion (a, _) x = putVersion (find (== Version x) a)
+
