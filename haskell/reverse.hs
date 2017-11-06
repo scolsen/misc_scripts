@@ -29,5 +29,6 @@ options =  [ Option ['v'] ["verbose"] (NoArg Verbose) "Chatty output",
 rvrs = map reverse 
 
 main = parseArgs options
-       >>= print
+       >>= \parsed -> print parsed
+       >>= \_ -> print (getOptsByName ["d", "o"] parsed)
        -- >>= return . rvrs . parsedToNonOpts 
