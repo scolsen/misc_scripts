@@ -12,6 +12,7 @@ module MinParse (
                   optVal,
                   getOptByName,
                   getOptsByName,
+                  getValByName,
                   putversion,
                   puthelp,
                   displayhelp,
@@ -79,6 +80,9 @@ optionNames x = join (map optNames x)
 
 getOptByName :: String -> Parsed -> [Flag]
 getOptByName str x = filter (optHasName str) (fst x)
+
+getValByName :: String -> Parsed -> [Maybe String]
+getValByName str x  = map optVal (getOptByName str x)
 
 getOptsByName :: [String] -> Parsed -> [Flag]
 getOptsByName strs p = join (map (\y -> (getOptByName y p)) strs)
