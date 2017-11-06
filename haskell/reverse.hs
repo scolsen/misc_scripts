@@ -29,6 +29,7 @@ rvrs = map reverse
 
 main = parseArgs options
        >>= \parsed -> print (getAllIdentifiers parsed)
-       -- >>= \_      -> print (getArgByIden parsed "d")
-       -- >>= \_      -> return (rvrs (parsedNonOpts parsed))
-       -- >>= print
+       >>= \_      -> print (getArgByIden parsed "dragon")
+       >>= \_      -> return (rvrs (parsedNonOpts parsed))
+       >>= print
+       
