@@ -13,13 +13,16 @@ module MinParse (
                   putversion,
                   puthelp,
                   displayhelp,
-                  parsedIO
+                  parsedIO,
+                  parseArgs
                 ) where
 
+
+import System.IO
+import System.Environment
+import System.Exit
 import System.Console.GetOpt
 import Data.Maybe
-import System.IO
-import System.Exit
 import Data.List
 import Data.Maybe
 
@@ -41,6 +44,10 @@ parsed trip = (parsedOpts trip, nonOpts trip)
 
 parsedIO :: OptTuple -> IO Parsed
 parsedIO trip = return (parsedOpts trip, nonOpts trip)
+
+parseArgs :: [OptDescr Flag] -> IO Parsed
+parseArgs opts = getArgs
+                 >>= parsedIO . parse opts
 
 parsedOpts :: OptTuple -> [Flag]
 parsedOpts (a, _, _) = a
