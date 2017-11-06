@@ -13,10 +13,7 @@ import Data.List
 -- Use Opt for arguments that take strings.
 -- Use Flg for arguments that are boolean flags.
 
-version :: String
 version = "1.0.0"
-
-help :: String
 help = "Usage: ..."
 
 options :: [OptDescr Flag]
@@ -30,5 +27,6 @@ rvrs = map reverse
 
 main = parseArgs options
        >>= \parsed -> print parsed
-       >>= \_ -> print (getOptsByName ["d", "o"] parsed)
-       -- >>= return . rvrs . parsedToNonOpts 
+       >>= \_ -> print (getValByName "d" parsed)
+       >>= \_ -> return (rvrs (parsedToNonOpts parsed))
+       >>= print
