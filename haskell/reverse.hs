@@ -17,16 +17,18 @@ version = "1.0.0"
 help = "Usage: ..."
 
 options :: [OptDescr Flag]
-options =  [ Option ['v'] ["verbose"] (NoArg Verbose) "Chatty output",
+options =  [ noArg ['v'] ["verbose"] True "Chatty output",
+             Option ['V'] ["version"] (NoArg (Version version)) "Version",
              Option ['h'] ["help"] (NoArg (Help help)) "Help",
-             Option ['o'] ["output"] (OptArg (Opt ["o"] . fromMaybe "stdout") "OUT") "Output",
-             Option ['d'] ["dragon"] (OptArg (Opt ["dragon","d"] . fromMaybe "other") "OUT") "Output"
+             optArg ['o'] ["output"] "stdout" "OUT" "Output",
+             optArg ['d'] ["dragon"] "other" "OUT" "Output",
+             optArg ['t'] ["test"] "test" "TET" "this is a test"
            ]
 
 rvrs = map reverse 
 
 main = parseArgs options
-       >>= \parsed -> print parsed
-       >>= \_ -> print (getValByName "d" parsed)
-       >>= \_ -> return (rvrs (parsedToNonOpts parsed))
-       >>= print
+       >>= \parsed -> print (getAllIdentifiers parsed)
+       -- >>= \_      -> print (getArgByIden parsed "d")
+       -- >>= \_      -> return (rvrs (parsedNonOpts parsed))
+       -- >>= print
