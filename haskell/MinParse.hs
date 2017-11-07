@@ -23,10 +23,13 @@ module MinParse (
                   noArg,
                   option,
                   params,
+                  help,
+                  version,
                   putVersion,
                   putHelp,
                   displayHelp,
-                  displayVersion
+                  displayVersion,
+                  info
                 ) where
 
 import System.IO 
@@ -41,13 +44,13 @@ import Data.Maybe
 data OptionGenerator = Params {
                                    charIdens :: [Char],
                                    stringIdens :: [String],
-                                   useText :: String,
+                                   usage :: String,
                                    defaultArg :: String,
-                                   argType :: String
+                                   argType :: String -- Printed using getOpt's usageInfo 
                               }
                               deriving Show
 -- param updater/defaults
-params = Params {charIdens = [], stringIdens = [], useText = undefined, defaultArg = "", argType = ""}
+params = Params {charIdens = [], stringIdens = [], usage = undefined, defaultArg = "", argType = ""}
 
 data Identifiers = Identifiers [Char] [String] deriving(Eq, Show)
 data Flag = Verbose 
@@ -131,15 +134,15 @@ unIdenStr (Identifiers _ a) = a
 -- OptionGenerator
 optArg :: OptionGenerator -> OptDescr Flag
 optArg args =
-    _optArg (charIdens args) (stringIdens args) (defaultArg args) (argType args) (useText args)
+    _optArg (charIdens args) (stringIdens args) (defaultArg args) (argType args) (usage args)
 
 reqArg :: OptionGenerator -> OptDescr Flag
 reqArg args =
-    _reqArg (charIdens args) (stringIdens args) (argType args) (useText args)
+    _reqArg (charIdens args) (stringIdens args) (argType args) (usage args)
 
 noArg :: OptionGenerator -> OptDescr Flag
 noArg args =
-    _noArg (charIdens args) (stringIdens args) True (useText args)
+    _noArg (charIdens args) (stringIdens args) True (usage args)
 
 option :: OptionGenerator -> OptDescr Flag -- determine option to use based on record contents
 option x 
@@ -149,6 +152,12 @@ option x
 
 
 -- Display
+help :: String -> OptDescr Flag
+help x = Option ['h'] ["help"] (NoArg (Help x)) "Help"
+
+version :: String -> OptDescr Flag
+version x = Option ['V'] ["version"] (NoArg (Version x)) "Version"
+
 putHelp :: Maybe Flag -> IO ()
 putHelp (Just (Help a)) = putStrLn a >> exitWith(ExitFailure 1)
 putHelp Nothing         = putStrLn "No help documentation provided."
@@ -163,6 +172,10 @@ displayHelp (a, _) x = putHelp (find (== Help x) a)
 displayVersion :: Parsed -> String -> IO ()
 displayVersion (a, _) x = putVersion (find (== Version x) a)
 
+-- synonyms 
+info :: String -> [OptDescr Flag] -> String
+info x y = usageInfo x y
+
 -- Private
 -- unwrap records to construct getOpt items
 _optArg :: [Char] -> [String] -> String -> String -> String -> OptDescr Flag
@@ -176,5 +189,4 @@ _reqArg c s alt use =
 _noArg :: [Char] -> [String] -> Bool -> String -> OptDescr Flag
 _noArg c s def use = 
     Option c s (NoArg (Flg (Identifiers c s) def)) use
-
 
