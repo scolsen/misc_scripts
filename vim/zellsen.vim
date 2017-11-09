@@ -17,9 +17,9 @@ hi Constant term=underline ctermfg=DarkRed guifg=Magenta
 hi Special term=bold ctermfg=DarkRed guifg=Magenta
 hi Identifier term=underline ctermfg=DarkRed guifg=Blue
 hi Statement term=bold ctermfg=DarkRed gui=NONE guifg=Brown
-hi PreProc term=underline ctermfg=LightRed guifg=Purple
+hi PreProc term=underline ctermfg=DarkGray guifg=Purple
 hi Type term=underline ctermfg=DarkRed gui=NONE guifg=Blue
-hi Visual term=reverse ctermfg=Yellow ctermbg=Red gui=NONE guifg=Black guibg=Yellow
+hi Visual term=reverse ctermfg=White ctermbg=Red gui=NONE guifg=Black guibg=Yellow
 hi Search term=reverse ctermfg=Black ctermbg=Cyan gui=NONE guifg=Black guibg=Cyan
 hi Tag term=bold ctermfg=DarkGreen guifg=DarkGreen
 hi Error term=reverse ctermfg=15 ctermbg=9 guibg=Red guifg=White
